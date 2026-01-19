@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { onAuthStateChanged, User } from 'firebase/auth';
+import { onAuthStateChanged, User, signOut as firebaseSignOut } from 'firebase/auth';
 import { auth } from './firebase';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
@@ -14,12 +14,17 @@ import { Solutions } from './components/Solutions';
 import { Pricing } from './components/Pricing';
 import { Support } from './components/Support';
 import { Profile } from './components/Profile';
+import { AppDashboard } from './components/AppDashboard';
+import { ThemeProvider } from './context/ThemeContext';
+import { ToastProvider } from './context/ToastContext';
+import { ToastContainer } from './components/ToastContainer';
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [showAuth, setShowAuth] = useState(false);
   const [currentPage, setCurrentPage] = useState('home');
+  const [showAppDashboard, setShowAppDashboard] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -35,6 +40,11 @@ const App: React.FC = () => {
     const handleRouting = () => {
       const hash = window.location.hash.slice(1) || 'home';
       setCurrentPage(hash);
+      if (hash === 'dashboard') {
+        setShowAppDashboard(true);
+      } else {
+        setShowAppDashboard(false);
+      }
     };
 
     handleRouting();
@@ -45,11 +55,34 @@ const App: React.FC = () => {
     };
   }, []);
 
+  const handleLogout = async () => {
+    try {
+      await firebaseSignOut(auth);
+      setUser(null);
+      setShowAppDashboard(false);
+      window.location.hash = 'home';
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
       </div>
+    );
+  }
+
+  // User is authenticated and on dashboard
+  if (user && showAppDashboard) {
+    return (
+      <ThemeProvider>
+        <ToastProvider>
+          <AppDashboard user={user} onLogout={handleLogout} />
+          <ToastContainer />
+        </ToastProvider>
+      </ThemeProvider>
     );
   }
 

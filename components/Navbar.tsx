@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Menu, X, ChevronDown, LogOut, Settings, User } from 'lucide-react';
 import { signOut } from 'firebase/auth';
 import { auth } from '../firebase';
+import { ThemeToggle } from './ThemeToggle';
 
 interface NavbarProps {
   onAuthClick?: () => void;
@@ -134,6 +135,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onAuthClick, currentPage = 'home
 
           {/* Right CTA */}
           <div className="flex-1 flex justify-end items-center gap-4">
+            <ThemeToggle />
             {isLoggedIn ? (
               <div className="hidden md:block relative group">
                 <button
